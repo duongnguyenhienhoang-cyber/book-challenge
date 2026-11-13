@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BOOK CHALLENGE | FSchool Long Vân</title>
+<style>
+:root{--navy:#173c70;--blue:#2879c7;--bg:#f3f6fb;--ink:#172338;--muted:#66758a;--line:#dce4ef;--green:#16845b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--ink)}
+header{background:linear-gradient(120deg,#173c70,#2879c7);color:#fff;padding:26px 18px}
+.wrap{max-width:900px;margin:auto}.brand{font-size:13px;letter-spacing:2px;font-weight:bold;color:#dbeafe}
+h1{margin:8px 0;font-size:clamp(27px,5vw,40px)}header p{margin:0;color:#e5efff}
+main{max-width:900px;margin:22px auto;padding:0 14px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 5px 18px #1c35520b}
+h2{font-size:20px;margin:0 0 14px}.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+button{border:0;border-radius:10px;padding:13px 16px;font-size:15px;font-weight:bold;cursor:pointer;background:var(--blue);color:white}
+button:disabled{opacity:.45;cursor:not-allowed}.level,.set-btn{background:#eef4fc;color:#24466f;border:2px solid transparent}.level.active,.set-btn.active{border-color:var(--blue);background:#e1efff}
+.set-btn{padding:10px 8px;font-size:13px}
+input{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:9px;font-size:16px;margin:6px 0 14px}
+label{font-weight:bold;font-size:14px}.row{display:flex;gap:12px}.row>*{flex:1}
+.small{font-size:13px;color:var(--muted)}.hidden{display:none!important}
+.progress{height:8px;background:#e8edf4;border-radius:9px;overflow:hidden;margin:12px 0}.bar{height:100%;background:var(--blue);width:0}
+.option{display:block;width:100%;text-align:left;background:#f5f8fc;color:#24364d;border:1px solid #dce4ef;margin:9px 0;font-weight:normal}
+.option.selected{border:2px solid var(--blue);background:#eaf3ff}.option.correct{border:2px solid #16845b;background:#e8f7f0}.option.wrong{border:2px solid #c43e4b;background:#fff0f1}
+.pill{display:inline-block;padding:6px 10px;border-radius:20px;background:#eaf3ff;color:#245b95;font-size:12px;font-weight:bold}
+.result{text-align:center;padding:22px}.score{font-size:48px;font-weight:bold;color:var(--green)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left}th{color:#52647a}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:15px}
+@media(max-width:600px){.levels{grid-template-columns:1fr}.sets{grid-template-columns:repeat(2,1fr)}.row{display:block}.card{padding:16px}}
+</style></head>
+<body>
+<header><div class="wrap"><div class="brand">FSCHOOL LONG VÂN · GIAN HÀNG TRẢI NGHIỆM SỐ</div><h1>BOOK CHALLENGE</h1><p>Thử thách tri thức · Khám phá thế giới sách</p></div></header>
+<main>
+<section class="card" id="setup">
+<h2>1. Thông tin người chơi</h2>
+<div class="row"><div><label for="student">Họ và tên học sinh</label><input id="student" maxlength="70" placeholder="Nhập họ và tên"></div><div><label for="className">Lớp</label><input id="className" maxlength="20" placeholder="Ví dụ: 6A1"></div></div>
+<h2>2. Chọn cấp học</h2>
+<div class="levels">
+<button class="level active" data-level="Tiểu học">TIỂU HỌC</button>
+<button class="level" data-level="THCS">THCS</button>
+<button class="level" data-level="THPT">THPT</button>
+</div>
+<p class="small" id="levelHint">Bộ câu hỏi riêng dành cho học sinh Tiểu học.</p>
+<h2 style="margin-top:16px">3. Chọn bộ câu hỏi (5 câu/bộ)</h2>
+<div class="sets">
+<button class="set-btn active" data-set="random">🎲 Ngẫu nhiên</button>
+<button class="set-btn" data-set="0">Bộ đề 1</button>
+<button class="set-btn" data-set="1">Bộ đề 2</button>
+<button class="set-btn" data-set="2">Bộ đề 3</button>
+<button class="set-btn" data-set="3">Bộ đề 4</button>
+<button class="set-btn" data-set="4">Bộ đề 5</button>
+<button class="set-btn" data-set="5">Bộ đề 6</button>
+</div>
+<button id="start" style="width:100%;margin-top:8px">BẮT ĐẦU THỬ THÁCH</button>
+<p class="small">Ngân hàng gồm 30 câu hỏi/cấp học, chia làm 6 bộ đề (mỗi bộ 5 câu hỏi).</p>
+</section>
+<section class="card hidden" id="quiz">
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><span class="pill" id="levelTag"></span><strong id="timer">10:00</strong></div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="small" id="counter"></div><h2 id="question"></h2><div id="options"></div>
+<p class="small" id="feedback"></p><button id="next" disabled style="width:100%">CÂU TIẾP THEO</button>
+</section>
+<section class="card hidden result" id="result">
+<div class="pill">HOÀN THÀNH THỬ THÁCH</div><h2 id="resultTitle">Kết quả của bạn</h2><div class="score" id="score"></div><p id="resultText"></p><p class="small" id="saveStatus"></p>
+<button id="again">CHƠI LẠI</button>
+</section>
+<section class="card" id="leaderboard">
+<h2>🏆 Bảng xếp hạng</h2><div class="row"><button class="level active" data-board="Tiểu học">Tiểu học</button><button class="level" data-board="THCS">THCS</button><button class="level" data-board="THPT">THPT</button></div>
+<div id="boardStatus" class="small" style="margin:12px 0">Bảng xếp hạng sẽ hiển thị sau khi kết nối Google Sheets.</div>
+<div style="overflow-x:auto"><table><thead><tr><th>Hạng</th><th>Học sinh</th><th>Lớp</th><th>Điểm</th><th>Thời gian</th></tr></thead><tbody id="boardRows"></tbody></table></div>
+<button id="refreshBoard" class="level" style="margin-top:12px">LÀM MỚI BẢNG XẾP HẠNG</button>
+</section>
+<section class="card"><h2>Dành cho Ban tổ chức</h2><p class="small">Để lưu kết quả tập trung và xem bảng xếp hạng trên laptop, cần triển khai Apps Script và dán URL Web App vào cấu hình bên dưới. Khi chưa cấu hình, ứng dụng vẫn chạy thử được trên thiết bị hiện tại nhưng dữ liệu không tự đồng bộ giữa các máy.</p>
+<label for="apiUrl">URL Web App (Google Apps Script)</label><input id="apiUrl" placeholder="https://google.com">
+<button id="saveConfig">LƯU CẤU HÌNH</button><span id="configStatus" class="small"></span>
+</section>
+</main><footer>BOOK CHALLENGE · Tổ Văn phòng – FSchool Long Vân</footer>
+<script>
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbzfS9ZdMnLOloiEVdG5NXsYcfiaaKpeBqISufkX1aELskKrYL5zxstYs7vLWseudBn-/exec";
+const BANK = {
+  "Tiểu học": [
+    [
+      ["Nơi nào trong trường có nhiều sách để học sinh đọc và mượn về nhà?", ["Phòng Giám Thị", "Văn phòng", "Phòng giáo viên", "Thư viện"], 3],
+      ["Khi vào thư viện, chúng ta cần giữ thái độ như thế nào?", ["Ồn ào", "Trật tự, im lặng", "Nhảy", "Hát"], 1],
+      ["Theo nội quy thư viện, mỗi học sinh được mượn tối đa bao nhiêu cuốn sách mang về nhà trong một lần?", ["1 cuốn", "2 cuốn", "4 cuốn", "3 cuốn"], 3],
+      ["Sau khi đọc sách xong, em cần làm gì?", ["Cất ở nhà", "Đưa cho bạn đọc", "Để trên lớp", "Trả sách cho thủ thư"], 3],
+      ["Người viết ra một cuốn sách được gọi là gì?", ["Thủ thư", "Họa sĩ", "Biên tập viên", "Tác giả"], 3]
+    ],
+    [
+      ["Bộ phận nào của sách thường ghi tên sách và tên tác giả?", ["Trang mục lục", "Trang phụ lục", "Bìa sách", "Trang lời nói đầu"], 2],
+      ["Nhân vật mèo máy đến từ tương lai trong truyện tranh Nhật Bản tên là gì?", ["Conan", "Doraemon", "Pikachu", "Nobita"], 1],
+      ["Nhân vật Dế Mèn xuất hiện trong tác phẩm nào?", ["Tắt đèn", "Dế Mèn phiêu lưu ký", "Truyện Kiều", "Đất rừng phương Nam"], 1],
+      ["Ai là tác giả của truyện Dế Mèn phiêu lưu ký?", ["Tô Hoài", "Nguyễn Nhật Ánh", "Nam Cao", "Nguyễn Du"], 0],
+      ["Trong truyện Tấm Cám, ai là người luôn tìm cách hãm hại Tấm?", ["Bà tiên", "Nhà vua", "Mẹ con Cám", "Ông Bụt"], 2]
+    ],
+    [
+      ["Trong truyện Cây khế, người em nhận được phần thưởng gì từ chim thần?", ["Rương bạc", "Vàng", "Ngọc", "Cung điện"], 1],
+      ["Trong câu chuyện Cô bé quàng khăn đỏ, cô bé mang bánh đến thăm ai?", ["Bà ngoại", "Mẹ", "Người bạn thân", "Cô giáo"], 0],
+      ["Đọc sách giúp chúng ta mở rộng điều gì?", ["Thời gian vui chơi", "Chiều cao", "Kiến thức", "Số lượng đồ dùng"], 2],
+      ["Cầu vồng thường có bao nhiêu màu?", ["7 màu", "6 màu", "5 màu", "4 màu"], 0],
+      ["Hành tinh chúng ta đang sinh sống có tên là gì?", ["Sao Hỏa", "Sao Kim", "Sao Mộc", "Trái Đất"], 3]
+    ],
+    [
+      ["Ngày Nhà giáo Việt Nam là ngày nào?", ["20/10", "01/06", "30/10", "20/11"], 3],
+      ["Khi thấy một cuốn sách bị rách, em nên báo cho ai?", ["Giám thị", "Giáo viên", "Thủ thư", "Tuyển sinh"], 2],
+      ["Nếu muốn tìm sách về động vật, em nên tìm ở nhóm sách nào?", ["Sách lịch sử", "Sách khoa học về động vật", "Sách văn học", "Sách nghệ thuật"], 1],
+      ["Chương trình khuyến đọc học kỳ I của thư viện có tên là gì?", ["Sách và cuộc sống", "Mỗi ngày một trang sách", "Cùng sách lớn khôn", "Bạn đồng hành cùng sách"], 3],
+      ["Thông điệp của chương trình “Bạn đồng hành cùng sách” là gì?", ["Đọc sách mỗi ngày – Thành công mỗi ngày", "Mỗi trang sách – Một hành trình mới", "Sách là người bạn tốt nhất", "Tri thức là sức mạnh"], 1]
+    ],
+    [
+      ["Để tham gia chương trình “Bạn đồng hành cùng sách”, học sinh cần đến đâu?", ["Phòng Giám Thị", "Phòng Tuyển sinh", "Thư viện", "Hội trường"], 2],
+      ["Sau khi mượn sách, học sinh ghi lại hành trình đọc của mình vào đâu?", ["Sổ nhật ký hành trình đọc sách", "Vở bài tập", "Sổ đầu bài", "Thời khóa biểu"], 0],
+      ["Chương trình “Bạn đồng hành cùng sách” hướng đến những cấp học nào?", ["Tiểu học", "THCS", "THPT", "Tiểu học, THCS và THPT"], 3],
+      ["Chương trình “Người Phụ nữ tôi yêu” được tổ chức nhân dịp ngày lễ nào?", ["Ngày Quốc tế Phụ nữ 8/3", "Ngày Nhà giáo Việt Nam 20/11", "Ngày Phụ nữ Việt Nam 20/10", "Ngày Gia đình Việt Nam 28/6"], 2],
+      ["Ngày Phụ nữ Việt Nam là ngày nào?", ["30/10", "08/03", "20/11", "20/10"], 3]
+    ],
+    [
+["Hoạt động dành cho học sinh Tiểu học trong chương trình “Người Phụ nữ tôi yêu” có tên là gì?", ["Trang sách yêu thương", "Bức tranh yêu thương, Bông hoa yêu thương", "Góc đọc sách", "Bông hoa đọc sách"], 1],
+["Trong hoạt động “Bức tranh yêu thương”, các em thể hiện tình cảm bằng sản phẩm gì?", ["Tranh tô màu kèm lời nhắn yêu thương", "Một bài thơ", "Một tấm thiệp viết tay", "Một bài hát"], 0],
+["Em có thể gửi lời yêu thương đến những ai trong chương trình “Người Phụ nữ tôi yêu”?", ["Ông", "Mẹ, bà, cô giáo và những người phụ nữ em yêu quý", "Bố", "Bạn bè"], 1],
+["Khi chọn một cuốn sách để tặng mẹ, em nên ưu tiên cuốn sách nào?", ["Sách có nhiều trang nhất", "Cuốn sách phù hợp với sở thích và mang thông điệp yêu thương", "Sách có nhiều hình ảnh nhất", "Sách có bìa cứng nhất"], 1],
+["Khi đọc xong một cuốn sách tại thư viện, em nên làm gì?", ["Để sách trên bàn", "Mang sách về nhà", "Đặt sách đúng nơi quy định hoặc trả cho thủ thư", "Để sách ở bất kỳ kệ nào"], 2]
+]
+],
+  "THCS": [
+    [
+      ["Ai là tác giả của Truyện Kiều?", ["Hàn Mặc Tử", "Nam Cao", "Xuân Diệu", "Nguyễn Du"], 3],
+      ["Truyện Kiều có bao nhiêu câu thơ lục bát?", ["3.254 câu", "2.543 câu", "4.523 câu", "1.010 câu"], 0],
+      ["Tác phẩm Lão Hạc là của nhà văn nào?", ["Nam Cao", "Tố Hữu", "Victor Hugo", "Nguyễn Nhật Ánh"], 0],
+      ["Nhân vật Chí Phèo được sáng tác bởi nhà văn nào?", ["Nguyễn Du", "Nam Cao", "Nguyễn Thành Long", "Tô Hoài"], 1],
+      ["Ai là tác giả của tác phẩm Tôi đi học?", ["Hoàng Cầm", "Nguyễn Khoa Điềm", "Thanh Tịnh", "Nguyên Hồng"], 2]
+    ],
+    [
+      ["Tác phẩm Lặng lẽ Sa Pa là của nhà văn nào?", ["Nguyễn Thành Long", "Chính Hữu", "Nguyên Hồng", "Nam Cao"], 0],
+      ["Ai là tác giả bài thơ Đồng chí?", ["Hàn Mặc Tử", "Nguyễn Du", "Chính Hữu", "Nguyên Hồng"], 2],
+      ["Bài thơ Bếp lửa do nhà thơ nào sáng tác?", ["Bằng Việt", "Ngô Tất Tố", "Nguyễn Bỉnh Khiêm", "Y Phương"], 0],
+      ["Tác phẩm Đất rừng phương Nam là của ai?", ["Nguyễn Khoa Điềm", "Victor Hugo", "Đoàn Giỏi", "Nguyễn Thành Long"], 2],
+      ["Người phụ trách quản lý sách và hỗ trợ bạn đọc trong thư viện được gọi là gì?", ["Bảo vệ", "Thủ thư", "Cán bộ văn phòng", "Giám thị học đường"], 1]
+    ],
+    [
+      ["Vì sao không nên gấp góc trang sách để đánh dấu trang?", ["Vì hành động này khiến mực in trên các trang sách bị nhòe đi và không thể đọc được nữa.", "Vì sẽ tạo thành nếp gãy vĩnh viễn, làm mất thẩm mỹ, khiến giấy dễ bị rách, sờn và giảm tuổi thọ của sách.", "Vì việc gấp góc trang sách sẽ làm thay đổi thứ tự các trang và làm mất nội dung của cuốn sách.", "Vì luật xuất bản quy định việc gấp góc trang sách là hành vi vi phạm bản quyền tác giả."], 1],
+      ["Khi tìm một cuốn sách trong thư viện, thông tin nào giúp xác định vị trí sách?", ["Số thứ tự đăng ký cá biệt của người mượn và ngày xuất bản của cuốn sách.", "Mã ký hiệu xếp giá (Call number / Mã định danh sách bao gồm số phân loại và mã tác giả).", "Tên của người thiết kế bìa sách và danh mục các nhà sách phân phối trên thị trường.", "Kích thước chiều cao, độ dày của gáy sách và tổng số trang của tài liệu."], 1],
+      ["Vì sao cần ghi nguồn khi sử dụng thông tin từ sách hoặc tài liệu?", ["Để làm tăng độ dài cho bài viết và giúp bố cục bài báo cáo nhìn đẹp mắt hơn.", "Để người đọc biết được giá tiền của cuốn sách và nơi bán tài liệu đó trên thị trường.", "Để tôn trọng bản quyền tác giả, tránh đạo văn và giúp người đọc dễ dàng tra cứu, xác thực thông tin.", "Để chứng minh rằng người viết đã học thuộc lòng toàn bộ nội dung của cuốn sách đó."], 2],
+      ["Ngày Sách và Văn hóa đọc Việt Nam là ngày nào?", ["21/4", "26/3", "22/12", "20/10"], 0],
+      ["Ngày Quốc tế Sách và Bản quyền thế giới là ngày nào?", ["20/10", "20/11", "21/4", "23/4"], 3]
+    ],
+    [
+      ["Trong chương trình “Bạn đồng hành cùng sách”, học sinh cần ghi lại những hoạt động gì vào sổ nhật ký?", ["Ghi tên cuốn sách mình yêu thích", "Mượn sách, đọc sách và hoàn thành sách", "Đánh dấu nhiều sách mình đã đọc nhất", "Ghi nội dung của cuốn sách mình yêu thích"], 1],
+      ["Mục tiêu chính của chương trình “Bạn đồng hành cùng sách” là gì?", ["Hình thành và phát triển thói quen đọc sách", "Phát triển khả năng làm việc nhóm", "Phát triển kỹ năng tự chăm sóc sức khỏe", "Phát triển tư duy kinh doanh"], 0],
+      ["Học sinh tham gia chương trình “Bạn đồng hành cùng sách” có cơ hội nhận được gì?", ["Thẻ bạn đọc", "Sự ghi nhận và những phần quà", "Bookmark", "Bông hoa đọc sách"], 1],
+      ["Sau khi đọc xong một cuốn sách, em nên làm gì để lưu giữ những điều tâm đắc?", ["Viết cảm nhận hoặc ghi lại bài học", "Viết lên bảng để các bạn cùng đọc", "Cắt những nội dung tâm đắc dán lên tường", "Ghi nội dung tâm đắc lên bàn học của mình"], 0],
+      ["Chương trình “Người Phụ nữ tôi yêu” hướng đến việc tôn vinh ai?", ["Những bạn đọc là nữ", "Những người phụ nữ Việt Nam", "Những tác giả nữ", "Những tác phẩm về phụ nữ"], 1]
+    ],
+    [
+      ["Hoạt động dành cho học sinh THCS và THPT trong chương trình “Người Phụ nữ tôi yêu” có tên là gì?", ["Một bông hoa yêu thương", "Bức tranh yêu thương", "Bookmark yêu thương", "Trang sách yêu thương"], 0],
+      ["Sản phẩm “Bông hoa đọc sách” được thiết kế với bao nhiêu cánh hoa?", ["3 cánh", "4 cánh", "5 cánh", "6 cánh"], 2],
+      ["Để tham gia hoạt động “Một bông hoa yêu thương”, học sinh cần mượn tối thiểu bao nhiêu cuốn sách theo chủ đề?", ["1 cuốn", "3 cuốn", "2 cuốn", "4 cuốn"], 0],
+      ["Nội dung sách được lựa chọn cho hoạt động “Một bông hoa yêu thương” thường xoay quanh chủ đề nào?", ["Gia đình, mẹ, bà hoặc những người phụ nữ có ý nghĩa", "Tâm lý học", "Văn học nước ngoài", "Khoa học tự nhiên"], 0],
+      ["Ai là tác giả của tác phẩm “Cho tôi xin một vé đi tuổi thơ”?", ["Ngô Tất Tố", "Hàn Mặc Tử", "Nguyễn Nhật Ánh", "Trần Đăng Khoa"], 2]
+    ],
+    [
+      ["“Nhật ký Đặng Thùy Trâm” thuộc thể loại nào?", ["Thơ Nôm", "Văn học thế giới", "Thơ tự do", "Nhật ký"], 3],
+      ["Ai là tác giả của tác phẩm “Dế Mèn phiêu lưu ký”?", ["Nam Cao", "Tô Hoài", "Kim Lân", "Vũ Trọng Phụng"], 1],
+      ["Khi gặp thông tin trong sách chưa rõ nguồn gốc, em nên làm gì để kiểm chứng?", ["Tin tưởng hoàn toàn vì thông tin đã được in thành sách.", "Chia sẻ ngay thông tin đó lên mạng xã hội để nhờ cộng đồng mạng kiểm chứng giúp.", "Bỏ qua và coi như thông tin đó là hoàn toàn sai sự thật mà không cần xác minh.", "Tra cứu từ các nguồn chính thống, uy tín hoặc hỏi giáo viên, người có chuyên môn."], 3],
+      ["Đọc sách có thể giúp phát triển những khả năng nào ngoài tiếp thu kiến thức?", ["Khả năng quan sát thực tế và phản xạ vận động", "Tư duy, tưởng tượng, sáng tạo và ngôn ngữ", "Kỹ năng giao tiếp trực tiếp mà không cần luyện tập", "Khả năng nhìn trong tầm mắt xa hơn"], 1],
+      ["Tác phẩm nào của Nguyễn Nhật Ánh kể về thế giới tuổi thơ qua góc nhìn của nhóm bạn Tí, Tường, Hải cò và Mùi?", ["Kính vạn hoa", "Mắt biếc", "Cho tôi xin một vé đi tuổi thơ", "Bàn có năm chỗ ngồi"], 2]
+    ]
+  ],
+  "THPT": [
+    [
+      ["Tác giả của tác phẩm Số đỏ là ai?", ["Nam Cao", "Vũ Trọng Phụng", "Tố Hữu", "Xuân Diệu"], 1],
+      ["Ai là tác giả của tác phẩm Vợ nhặt?", ["Kim Lân", "Hàn Mặc Tử", "Nguyễn Nhật Ánh", "Nam Cao"], 0],
+      ["Tác phẩm Vợ chồng A Phủ do nhà văn nào sáng tác?", ["Nam Cao", "Chế Lan Viên", "Tô Hoài", "Huy Cận"], 2],
+      ["Nhà thơ Xuân Diệu thường được mệnh danh là gì?", ["Đại thi hào dân tộc", "Bà chúa thơ Nôm", "Ông hoàng thơ tình", "Nhà thơ của nỗi sầu vạn kỷ"], 2],
+      ["Ai là tác giả của bài thơ Tây Tiến?", ["Nguyễn Nhật Ánh", "Quang Dũng", "Vũ Trọng Phụng", "Xuân Diệu"], 1]
+    ],
+    [
+      ["Tác phẩm Những người khốn khổ là của nhà văn nào?", ["Victor Hugo", "Nguyễn Huy Thiệp", "Nguyễn Tuân", "Nam Cao"], 0],
+      ["Nhà văn George Orwell nổi tiếng với hai tác phẩm nào?", ["Lặng lẽ Sa Pa", "Trại súc vật và 1984", "Chiến binh cầu vồng", "Bếp lửa"], 1],
+      ["Tác phẩm Nhà giả kim được viết bởi nhà văn nào?", ["Fyodor Dostoevsky", "Paulo Coelho", "Leo Tolstoy", "Franz Kafka"], 1],
+      ["Ai là tác giả của cuốn Đắc nhân tâm?", ["Fyodor Dostoevsky", "Albert Camus", "Dale Carnegie", "Haruki Murakami"], 2],
+      ["Tác phẩm Hoàng tử bé do nhà văn nào sáng tác?", ["Antoine de Saint-Exupéry", "Nguyễn Du", "Victor Hugo", "Franz Kafka"], 0]
+    ],
+    [
+      ["Trong nghiên cứu khoa học, đạo văn được hiểu là gì?", ["Tăng tốc độ đọc", "Sử dụng ý tưởng hoặc nội dung của người khác mà không ghi nhận nguồn phù hợp", "Mượn tài liệu của người khác", "Xem tài liệu trên mạng xã hội"], 1],
+      ["Trong chương trình “Bạn đồng hành cùng sách”, vì sao học sinh cần trực tiếp đến thư viện mượn sách trước khi tham gia ghi nhật ký hành trình đọc?", ["Để các thầy cô thủ thư kiểm tra thông tin và làm thẻ đọc sách mới cho học sinh.", "Để nhà trường thống kê số lượng học sinh tham gia và phát thưởng ngay tại chỗ.", "Để học sinh làm quen với không gian thư viện và học nội quy mượn trả sách.", "Để học sinh tự tay lựa chọn cuốn sách mình yêu thích và nhận \"Sổ nhật ký hành trình đọc sách\"."], 3],
+      ["Việc ghi chép cảm nhận sau khi đọc sách giúp học sinh phát triển kỹ năng nào?", ["Kinh doanh", "Làm việc nhóm", "Chăm sóc sức khỏe", "Tư duy phản biện, phân tích và diễn đạt"], 3],
+      ["Trong chương trình “Người Phụ nữ tôi yêu”, thông điệp mà thư viện muốn lan tỏa là gì?", ["Kêu gọi học sinh tích cực quyên góp những cuốn sách cũ về chủ đề gia đình để xây dựng quỹ từ thiện.", "Tôn vinh, tri ân những cống hiến thầm lặng của người phụ nữ và tạo cơ hội để học sinh gửi gắm yêu thương qua từng trang sách.", "Hướng dẫn học sinh phương pháp ghi nhớ nhanh nội dung các cuốn sách văn học nước ngoài về người phụ nữ.", "Khuyến khích học sinh thi đua đạt thành tích cao trong học kỳ mới để làm quà tặng dành cho mẹ và cô giáo."], 1],
+      ["Yếu tố nào giúp thư viện trong thời đại số thu hút người trẻ?", ["Tích hợp công nghệ hiện đại (thư viện số, tra cứu thông minh) kết hợp xây dựng không gian đa nhiệm, sáng tạo.", "Chỉ tập trung lưu trữ các loại sách in truyền thống độc bản và thắt chặt quy trình mượn trả bằng giấy tờ thủ công.", "Cắt giảm hoàn toàn không gian đọc trực tiếp để chuyển sang phục vụ độc giả trực tuyến qua mạng xã hội.", "Tăng mức phí làm thẻ thành viên để nâng cấp các dịch vụ giải trí đi kèm như trò chơi điện tử trực tuyến."], 0]
+    ],
+    [
+      ["Khi giới thiệu một cuốn sách cho toàn trường, nội dung nào nên được trình bày?", ["Phân loại bạn đọc", "Biên mục tài liệu", "Tên sách, tác giả, nội dung chính và lý do nên đọc", "Mục lục"], 2],
+      ["Việc ghi nhận các thông tin như tên sách, tác giả, nhà xuất bản và năm xuất bản trong thư viện được gọi là gì?", ["Thanh lý tài liệu", "Biên mục tài liệu", "Phân loại bạn đọc", "Mục lục"], 1],
+["Khi chưa biết cách tìm một cuốn sách trong thư viện, học sinh nên nhờ ai hỗ trợ?", ["Bác bảo vệ", "Cán bộ thư viện", "Giáo viên chủ nhiệm", "Cán bộ giám thị học đường"], 1],
+["Vì sao thư viện cần kiểm kê sách định kỳ?", ["Để thay đổi toàn bộ hệ thống phân loại sách cũ và bắt buộc độc giả phải làm lại thẻ thư viện mới.", "Để nắm rõ số lượng thực tế, kịp thời phát hiện sách mất mát, hư hỏng và có kế hoạch bổ sung, sửa chữa.", "Để tạm dừng mọi hoạt động mượn trả trực tuyến và chuyển hẳn sang hình thức quản lý thủ công.", "Để tăng giá mượn sách đối với các đầu sách hiếm hoặc đang được nhiều người tìm đọc nhất."], 1],
+["Khi mượn sách về nhà, học sinh cần thực hiện việc gì để thư viện ghi nhận?", ["Tự lấy sách của mình thích không cần mượn", "Lấy sách rồi báo giáo viên chủ nhiệm", "Đăng ký mượn theo quy trình thư viện", "Đưa thẻ bạn đọc cho cán bộ thư viện"], 2]
+],
+[
+["Nếu làm mất sách đã mượn, học sinh cần làm gì?", ["Không báo cho cán bộ thư viện", "Báo cho cán bộ thư viện và thực hiện trách nhiệm theo quy định", "Báo cho ban giám hiệu nhà trường", "Báo cho phụ huynh"], 1],
+["Hoạt động giới thiệu nội dung và giá trị của một cuốn sách đến bạn đọc gọi là gì?", ["Kiểm kê sách", "Biên mục sách", "Tuyên truyền giới thiệu sách (hoặc Giới thiệu sách / Điểm sách)", "Thanh lý sách"], 2],
+["Mục đích chính của các chương trình khuyến đọc trong trường học là gì?", ["Giảm bớt thời gian học tập các môn văn hóa chính khóa của học sinh trên lớp.", "Ép buộc học sinh phải thuộc lòng toàn bộ nội dung các cuốn sách có trong thư viện.", "Thay thế hoàn toàn hình thức kiểm tra đánh giá định kỳ bằng việc chấm điểm đọc sách.", "Khơi dậy niềm đam mê đọc sách, hình thành thói quen tự học và phát triển văn hóa đọc cho học sinh."], 3],
+["Khi giới thiệu một cuốn sách, những thông tin cơ bản nào nên được đề cập?", ["Tên sách, tên tác giả, nhà xuất bản, tóm tắt nội dung chính và giá trị/thông điệp của cuốn sách.", "Giá tiền của cuốn sách, số bản in đã bán ra và địa chỉ nhà riêng của tác giả.", "Quy trình in ấn, chất liệu giấy, kích thước font chữ và tên người thiết kế bìa sách.", "Danh sách tất cả các đại lý phân phối sách độc quyền trên toàn quốc."], 0],
+["Trong chương trình “Bạn đồng hành cùng sách”, học sinh sử dụng tài liệu nào để ghi lại hành trình đọc?", ["Thẻ mượn sách thư viện.", "Sổ nhật ký hành trình đọc sách", "Sách bài tập", "Bức tranh yêu thương"], 1]
+],
+[
+["Trong chương trình “Người Phụ nữ tôi yêu”, học sinh THCS và THPT gửi thông điệp qua sản phẩm nào?", ["Bức tranh yêu thương", "Sổ nhật ký hành trình đọc sách", "Bông hoa đọc sách", "Bookmark yêu thương"], 2],
+["Hoạt động nào có thể giúp học sinh THPT duy trì hứng thú đọc sách tại thư viện?", ["Tổ chức câu lạc bộ sách, các cuộc thi review sách sáng tạo (video, podcast) và không gian thảo luận mở.", "Tổ chức các buổi kiểm tra bài cũ nghiêm ngặt và chấm điểm xếp loại học lực dựa trên số trang sách học sinh đã đọc.", "Tăng cường các biện pháp phạt lao động đối với những học sinh không đến thư viện mượn sách đủ số lần quy định.", "Yêu cầu học sinh giữ im lặng tuyệt đối, không được trao đổi và chỉ được đọc các thể loại sách giáo khoa tham khảo."], 0],
+["Ngoài việc cung cấp tri thức, việc duy trì thói quen đọc sách văn học, kỹ năng sống mang lại lợi ích lâu dài nào cho sự phát triển của người trẻ?", ["Giúp thay thế hoàn toàn nhu cầu giao tiếp thực tế và các hoạt động thể chất ngoài trời.", "Giúp người đọc ngay lập tức trở nên giàu có về mặt tài chính mà không cần làm việc.", "Nuôi dưỡng lòng trắc ẩn, mở rộng thế giới quan và rèn luyện tư duy phản biện trước các vấn đề xã hội.", "Đảm bảo người đọc sẽ luôn đạt điểm tuyệt đối trong mọi kỳ thi mà không cần ôn tập."], 2],
+["Khi đọc sách giấy truyền thống, hành vi nào sau đây được coi là bảo quản sách đúng cách và văn minh?", ["Gấp mép góc trang sách (dog-ear) để đánh dấu trang đang đọc dở cho nhanh chóng.", "Sử dụng bookmark để lưu trang, lật mở nhẹ nhàng và đặt sách ở nơi khô ráo, thoáng mát.", "Sử dụng bút dạ quang kẻ đậm lên các trang sách mượn từ thư viện để người đọc sau dễ thấy.", "Úp ngược cuốn sách đang mở xuống bàn khi có việc bận đột xuất để không bị mất dấu."], 1],
+["Mục đích chính của dòng sách “Hạt giống tâm hồn” hoặc sách “Kỹ năng sống” (Self-help) hướng tới độc giả trẻ là gì?", ["Chia sẻ những câu chuyện truyền cảm hứng, bài học tư duy tích cực và phương pháp hoàn thiện bản thân.", "Cung cấp các công thức toán học và dữ liệu lịch sử chính xác để phục vụ thi cử.", "Đưa ra những lời giải trí, truyện cười thuần túy để người đọc thư giãn sau giờ học.", "Hướng dẫn chi tiết cách viết một cuốn tiểu thuyết giả tưởng ăn khách trong thời gian ngắn."], 0]
+]
+]
+};
+let level="Tiểu học", selectedSet="random", currentSetIndex=0, questions=[], idx=0, score=0, chosen=-1, seconds=600, tick=null, started=0, boardLevel="Tiểu học";
+const $=id=>document.getElementById(id);
+
+document.querySelectorAll("[data-level]").forEach(b=>b.onclick=()=>{
+  level=b.dataset.level;
+  document.querySelectorAll("[data-level]").forEach(x=>x.classList.toggle("active",x===b));
+  $("levelHint").textContent="Bộ câu hỏi riêng dành cho học sinh "+level+".";
+});
+
+document.querySelectorAll("[data-set]").forEach(b=>b.onclick=()=>{
+  selectedSet=b.dataset.set;
+  document.querySelectorAll("[data-set]").forEach(x=>x.classList.toggle("active",x===b));
+});
+
+document.querySelectorAll("[data-board]").forEach(b=>b.onclick=()=>{
+  boardLevel=b.dataset.board;
+  document.querySelectorAll("[data-board]").forEach(x=>x.classList.toggle("active",x===b));
+  loadBoard();
+});
+
+$("saveConfig").onclick=()=>{
+  localStorage.setItem("bookApi",$("apiUrl").value.trim());
+  $("configStatus").textContent=" Đã lưu cấu hình trên thiết bị này.";
+  loadBoard();
+};
+
+const savedApi = localStorage.getItem("bookApi") || DEFAULT_API_URL;
+$("apiUrl").value = savedApi;
+if(savedApi) loadBoard();
+
+$("start").onclick=()=>{
+  if(!$("student").value.trim()||!$("className").value.trim()){
+    alert("Vui lòng nhập họ tên và lớp.");
+    return;
+  }
+  const setsForLevel = BANK[level];
+  currentSetIndex = selectedSet === "random" ? Math.floor(Math.random() * setsForLevel.length) : Number(selectedSet);
+  questions = setsForLevel[currentSetIndex];
+  
+  idx=0; score=0; seconds=600; started=Date.now();
+  $("setup").classList.add("hidden");
+  $("leaderboard").classList.add("hidden");
+  $("result").classList.add("hidden");
+  $("quiz").classList.remove("hidden");
+  $("levelTag").textContent = `${level} · Bộ đề ${currentSetIndex + 1}`;
+  
+  clearInterval(tick);
+  tick=setInterval(()=>{seconds--;showTime();if(seconds<=0)finish()},1000);
+  renderQ();
+};
+
+function showTime(){
+  $("timer").textContent=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
+}
+
+function renderQ(){
+  let q = questions[idx];
+  let qText = q[0];
+  let qOpts = q[1];
+  let correct = q[2];
+  chosen=-1;
+  $("counter").textContent=`Câu ${idx+1}/${questions.length}`;
+  $("bar").style.width=(idx/questions.length*100)+"%";
+  $("question").textContent=qText;
+  $("options").innerHTML="";
+  $("feedback").textContent="";
+  $("next").disabled=true;
+  $("next").textContent=idx===questions.length-1?"HOÀN THÀNH":"CÂU TIẾP THEO";
+  
+  qOpts.forEach((v,i)=>{
+    let b=document.createElement("button");
+    b.className="option";
+    b.textContent=String.fromCharCode(65+i)+". "+v;
+    b.onclick=()=>{
+      if(chosen!==-1)return;
+      chosen=i;
+      Array.from($("options").children).forEach((el,j)=>{
+        if(j===correct)el.classList.add("correct");
+        if(j===i&&i!==correct)el.classList.add("wrong");
+      });
+      if(i===correct)score++;
+      $("feedback").textContent=(i===correct?"Chính xác! ":"Chưa chính xác. Đáp án đúng: "+String.fromCharCode(65+correct)+". ")+qOpts[correct];
+      $("next").disabled=false;
+    };
+    $("options").appendChild(b);
+  });
+}
+
+$("next").onclick=()=>{if(idx<questions.length-1){idx++;renderQ()}else finish()};
+
+async function finish(){
+  if($("quiz").classList.contains("hidden"))return;
+  clearInterval(tick);
+  $("quiz").classList.add("hidden");
+  $("result").classList.remove("hidden");
+  $("leaderboard").classList.remove("hidden");
+  $("score").textContent=score+"/"+questions.length;
+  $("resultText").textContent=score===questions.length?"Xuất sắc! Bạn là nhà thông thái về sách.":score>=3?"Rất tốt! Hãy tiếp tục phát huy nhé.":"Hãy tiếp tục đọc sách và thử sức lần nữa nhé!";
+  
+  let payload={
+    name:$("student").value.trim(),
+    className:$("className").value.trim(),
+    level,
+    score,
+    total:questions.length,
+    secondsUsed:Math.round((Date.now()-started)/1000),
+    createdAt:new Date().toISOString()
+  };
+  
+  let api=localStorage.getItem("bookApi") || DEFAULT_API_URL;
+  if(api){
+    try{
+      await fetch(api,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"submit",...payload})});
+      $("saveStatus").textContent="Đã gửi kết quả lên hệ thống. Vui lòng kiểm tra bảng xếp hạng.";
+    }catch(e){
+      $("saveStatus").textContent="Chưa gửi được kết quả. Vui lòng báo Ban tổ chức.";
+    }
+  }else{
+    $("saveStatus").textContent="Chế độ thử nghiệm trên thiết bị này; chưa đồng bộ kết quả giữa các máy.";
+  }
+  loadBoard();
+}
+
+$("again").onclick=()=>{$("result").classList.add("hidden");$("leaderboard").classList.add("hidden");$("setup").classList.remove("hidden")};
+
+function loadBoard(){
+  let api=localStorage.getItem("bookApi") || DEFAULT_API_URL;
+  if(!api){
+    $("boardStatus").textContent="Chưa kết nối Google Sheets. Bảng xếp hạng sẽ hoạt động sau khi Ban tổ chức cấu hình.";
+    return;
+  }
+  $("boardStatus").textContent="Đang tải bảng xếp hạng…";
+  let cb="bookBoard"+Date.now();
+  window[cb]=data=>{
+    delete window[cb];
+    document.getElementById(cb)?.remove();
+    let rows=(data.results||[]);
+    $("boardRows").innerHTML="";
+    rows.slice(0,20).forEach((r,i)=>{
+      let tr=document.createElement("tr");
+      [i+1,r.name,r.className,r.score+"/"+r.total,Math.floor(r.secondsUsed/60)+"p "+r.secondsUsed%60+"s"].forEach(v=>{
+        let td=document.createElement("td");
+        td.textContent=v;
+        tr.appendChild(td);
+      });
+      $("boardRows").appendChild(tr);
+    });
+    $("boardStatus").textContent=rows.length?`Top ${Math.min(20,rows.length)} học sinh · ${boardLevel}`:"Chưa có kết quả cho cấp học này.";
+  };
+  let s=document.createElement("script");
+  s.id=cb;
+  s.src=api+"?action=leaderboard&level="+encodeURIComponent(boardLevel)+"&callback="+cb;
+  s.onerror=()=>{$("boardStatus").textContent="Không tải được bảng xếp hạng. Kiểm tra URL triển khai."};
+  document.body.appendChild(s);
+}
+$("refreshBoard").onclick=loadBoard;
+</script>
+</body>
+</html>
